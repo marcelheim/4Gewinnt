@@ -1,38 +1,124 @@
 package m.heim;
 
-import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
-import javafx.scene.control.Button;
+import javafx.scene.layout.Pane;
+import javafx.scene.paint.Color;
+import javafx.scene.paint.Paint;
+import javafx.scene.shape.Circle;
+import javafx.scene.shape.Rectangle;
+import javafx.scene.shape.Shape;
 
 import java.net.URL;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.ResourceBundle;
 
 public class GameSceneController implements Initializable {
-    Game game;
+    private Game game;
+    private final int boardSizeX = 7;
+    private final int boardSizeY = 6;
+    private double sceneSizeX;
+    private double sceneSizeY;
+    private List<Disk> diskList = new ArrayList<>();
+    @FXML
+    private Pane rootPane;
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
-        game = new Game(7, 6);
+        sceneSizeX = rootPane.getPrefWidth();
+        sceneSizeY = rootPane.getPrefHeight();
+        initGame();
+        initDraw();
     }
 
-    @FXML
-    public void onPlaceButtonClick(ActionEvent event){
-        Button btn = (Button) event.getSource();
-        String btnId = btn.getId();
-        int x;
-        switch (btnId){
-            case "placeButton1" -> x = 0;
-            case "placeButton2" -> x = 1;
-            case "placeButton3" -> x = 2;
-            case "placeButton4" -> x = 3;
-            case "placeButton5" -> x = 4;
-            case "placeButton6" -> x = 5;
-            case "placeButton7" -> x = 6;
-            default -> throw new IllegalStateException("Unexpected value: " + btnId);
+    private void initGame(){
+        game = new Game(this.boardSizeX, this.boardSizeY);
+    }
+
+    private void initDraw(){
+        rootPane.setStyle("-fx-background-color: #212121");
+        rootPane.getChildren().clear();
+        rootPane.getChildren().add(makeGridShape());
+        rootPane.getChildren().addAll(makeColumnShapeList());
+    }
+
+    private boolean place(int x){
+        if(game.place(x)) {
+            drawDisk(new Point(x, game.getBoard().getPlacedHeight(x)));
+            debugPrint();
         }
-        game.place(x);
-        debugPrint();
+        return false;
+    }
+
+    private void drawDisk(Point position){
+        double tileSize = sceneSizeX / boardSizeX;
+        double diskSize = sceneSizeX / boardSizeX * 0.8f;
+        position = new Point(position.getX(), boardSizeY - position.getY());
+        System.out.println(position.getX() + " " + position.getY());
+        Paint color = Color.web("2196F3");
+        if(game.getPlayerLastTurn() == Player.PLAYER2) color = Color.web("1DE9B6");
+        Disk disk = new Disk(diskSize / 2, color, position, game.getPlayerLastTurn());
+        disk.setCenterX(diskSize / 2);
+        disk.setCenterY(diskSize / 2);
+        disk.setTranslateX(position.getX() * tileSize + (tileSize - diskSize) / 2);
+        disk.setTranslateY(position.getY() * tileSize + (tileSize - diskSize) / 2);
+        diskList.add(disk);
+        rootPane.getChildren().add(disk);
+    }
+
+    private Shape makeGridShape(){
+        double tileSize = sceneSizeX / boardSizeX;
+        double diskSize = sceneSizeX / boardSizeX * 0.8f;
+        Shape gridShape = new Rectangle(boardSizeX * tileSize, boardSizeY * tileSize);
+
+        for (int x = 0; x < boardSizeX; x++) {
+            for (int y = 0; y < boardSizeY; y++) {
+                Circle circle = new Circle(diskSize / 2);
+                circle.setSmooth(true);
+                circle.setCenterX(diskSize / 2);
+                circle.setCenterY(diskSize / 2);
+                circle.setTranslateX(x * tileSize + (tileSize - diskSize) / 2);
+                circle.setTranslateY(y * tileSize + (tileSize - diskSize) / 2);
+                gridShape = Shape.subtract(gridShape, circle);
+            }
+        }
+
+        gridShape.setSmooth(true);
+        gridShape.setFill(Color.web("000000"));
+
+        return gridShape;
+    }
+
+    private List<Rectangle> makeColumnShapeList(){
+        double tileSize = sceneSizeX / boardSizeX;
+
+        List<Rectangle> columnShapeList = new ArrayList<>();
+
+        for (int x = 0; x < boardSizeX; x++) {
+            Rectangle rect = new Rectangle(tileSize, tileSize * boardSizeY);
+            rect.setTranslateX(x * tileSize);
+
+            rect.setFill(Color.TRANSPARENT);
+            rect.setOnMouseEntered(e -> {
+                Paint color = Color.web("2196F3", 0.3);
+                if(game.getPlayerLastTurn() == Player.PLAYER1) color = Color.web("1DE9B6", 0.3);
+                rect.setFill(color);
+            });
+            rect.setOnMouseExited(e -> rect.setFill(Color.TRANSPARENT));
+
+            int finalX = x;
+            rect.setOnMouseClicked(e -> {
+                if(game.place(finalX)) {
+                    drawDisk(new Point(finalX, game.getBoard().getPlacedHeight(finalX)));
+                    debugPrint();
+                }
+            });
+
+            columnShapeList.add(rect);
+        }
+
+        return columnShapeList;
     }
 
     private void debugPrint(){

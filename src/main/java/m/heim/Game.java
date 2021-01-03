@@ -3,95 +3,66 @@ package m.heim;
 public class Game {
     private final Board board;
     private Player player;
+    private Player playerLastTurn;
     private Player winner;
     private boolean gameOver;
 
-    private Player evaluateWinnerFromPlacement(Point positionLastPlaced) {
-        boolean win = false;
-        int[] countedLengths = getCountedLengths(positionLastPlaced);
-        int[] countedLengthsAcross = {
-                countedLengths[0] + countedLengths[6],
-                countedLengths[2] + countedLengths[5],
-                countedLengths[3] + countedLengths[4],
-                countedLengths[1]};
-        for (int i = 0; i < 4; i++) {
-            if (countedLengthsAcross[i] >= 3) win = true;
-        }
-        if (win) return this.board.get(positionLastPlaced);
-        else return Player.UNDEFINED;
-    }
-
-    private int[] getCountedLengths(Point position) {
-        int[] countedLengths = new int[7];
-        int dirX, dirY;
-        for (int i = 0; i < 7; i++) {
-            switch (i) {
-                case 0 -> {
-                    dirX = -1;
-                    dirY = -1;
-                }
-                case 1 -> {
-                    dirX = 0;
-                    dirY = -1;
-                }
-                case 2 -> {
-                    dirX = 1;
-                    dirY = -1;
-                }
-                case 3 -> {
-                    dirX = -1;
-                    dirY = 0;
-                }
-                case 4 -> {
-                    dirX = 1;
-                    dirY = 0;
-                }
-                case 5 -> {
-                    dirX = -1;
-                    dirY = 1;
-                }
-                case 6 -> {
-                    dirX = 1;
-                    dirY = 1;
-                }
-                default -> throw new IllegalStateException("Unexpected value: " + i);
+    private boolean evaluateWinnerFromPlayer(Player player) {
+        // horizontalCheck
+        for (int j = 0; j < this.board.getBoardHeight() - 3; j++) {
+            for (int i = 0; i < this.board.getBoardWidth(); i++) {
+                if (this.board.get(new Point(i, j)) == player
+                        && this.board.get(new Point(i, j+1)) == player
+                        && this.board.get(new Point(i, j+2)) == player
+                        && this.board.get(new Point(i, j+3)) == player
+                ) return true;
             }
-            countedLengths[i] = countLengthInDir(dirX, dirY, position);
         }
-        return countedLengths;
-    }
-
-    private int countLengthInDir(int dirX, int dirY, Point position) {
-        boolean end = false;
-        int lengthInDir = 0;
-        int positionDirX = position.getX() + dirX;
-        int positionDirY = position.getY() + dirY;
-        Player player = this.board.get(position);
-        do {
-            if (positionDirX < 0 || positionDirY < 0
-                    || positionDirX >= this.board.getBoardWidth()
-                    || positionDirY >= this.board.getBoardHeight()
-            ) end = true;
-            else if (player == this.board.get(new Point(positionDirX, positionDirY))) {
-                positionDirX += dirX;
-                positionDirY *= dirY;
-                lengthInDir += 1;
-            } else end = true;
-        } while (!end);
-        return lengthInDir;
+        // verticalCheck
+        for (int i = 0; i < this.board.getBoardWidth()-3; i++) {
+            for (int j = 0; j < this.board.getBoardHeight(); j++) {
+                if (this.board.get(new Point(i, j)) == player
+                        && this.board.get(new Point(i+1, j)) == player
+                        && this.board.get(new Point(i+2, j)) == player
+                        && this.board.get(new Point(i+3, j)) == player
+                ) return true;
+            }
+        }
+        // ascendingDiagonalCheck
+        for (int i = 3; i < this.board.getBoardWidth(); i++) {
+            for (int j = 0; j < this.board.getBoardHeight()-3; j++) {
+                if (this.board.get(new Point(i, j)) == player
+                        && this.board.get(new Point(i-1, j+1)) == player
+                        && this.board.get(new Point(i-2, j+2)) == player
+                        && this.board.get(new Point(i-3, j+3)) == player
+                ) return true;
+            }
+        }
+        // descendingDiagonalCheck
+        for (int i = 3; i < this.board.getBoardWidth(); i++) {
+            for (int j = 3; j < this.board.getBoardHeight(); j++) {
+                if (this.board.get(new Point(i, j)) == player
+                        && this.board.get(new Point(i-1, j-1)) == player
+                        && this.board.get(new Point(i-2, j-2)) == player
+                        && this.board.get(new Point(i-3, j-3)) == player
+                ) return true;
+            }
+        }
+        return false;
     }
 
     public Game(int sizeX, int sizeY) {
         this.board = new Board(sizeX, sizeY);
         this.player = Player.PLAYER1;
+        this.playerLastTurn = Player.UNDEFINED;
         this.winner = Player.UNDEFINED;
         this.gameOver = false;
     }
 
     public boolean place(int x) {
         if (!this.gameOver && this.board.place(this.player, x)) {
-            Point position = new Point(x, board.getPlacedHeight(x) - 1);
-            this.winner = evaluateWinnerFromPlacement(position);
+            this.playerLastTurn = this.player;
+            if(evaluateWinnerFromPlayer(this.player)) this.winner = this.player;
             if (this.winner != Player.UNDEFINED
                     || this.board.getNumberOfStones() >= this.board.getBoardWidth() * this.board.getBoardHeight())
                 gameOver = true;
@@ -117,5 +88,9 @@ public class Game {
 
     public boolean isGameOver() {
         return gameOver;
+    }
+
+    public Player getPlayerLastTurn() {
+        return playerLastTurn;
     }
 }

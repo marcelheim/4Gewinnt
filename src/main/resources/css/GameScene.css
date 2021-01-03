@@ -1,4 +1,10 @@
-.button {
+.buttonStyle1 {
     -fx-text-fill: white;
     -fx-background-color: linear-gradient(from 0% 100% to 100% 0%, blue 0%, fuchsia 100%);
+    -fx-pref-width: 10000;
+    -fx-pref-height: 10000;
+    -fx-background-radius: 5px;
+    -fx-padding: 3px;
+    -fx-border-insets: 3px;
+    -fx-background-insets: 3px;
 }

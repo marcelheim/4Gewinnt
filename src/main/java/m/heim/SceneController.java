@@ -2,6 +2,7 @@ package m.heim;
 
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
+import javafx.scene.control.Label;
 import javafx.scene.layout.Pane;
 import javafx.scene.paint.Color;
 import javafx.scene.paint.Paint;
@@ -14,7 +15,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.ResourceBundle;
 
-public class GameSceneController implements Initializable {
+public class SceneController implements Initializable {
     private Game game;
     private final int boardSizeX = 7;
     private final int boardSizeY = 6;
@@ -23,6 +24,8 @@ public class GameSceneController implements Initializable {
     private List<Disk> diskList = new ArrayList<>();
     @FXML
     private Pane rootPane;
+    @FXML
+    private Label statusLabel;
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
@@ -30,6 +33,7 @@ public class GameSceneController implements Initializable {
         sceneSizeY = rootPane.getPrefHeight();
         initGame();
         initDraw();
+        updateStatusLabel();
     }
 
     private void initGame(){
@@ -43,28 +47,28 @@ public class GameSceneController implements Initializable {
         rootPane.getChildren().addAll(makeColumnShapeList());
     }
 
-    private boolean place(int x){
-        if(game.place(x)) {
-            drawDisk(new Point(x, game.getBoard().getPlacedHeight(x)));
-            debugPrint();
-        }
-        return false;
+    @FXML
+    private void restartAction(){
+        initGame();
+        initDraw();
+        debugPrint();
+        updateStatusLabel();
     }
 
-    private void drawDisk(Point position){
-        double tileSize = sceneSizeX / boardSizeX;
-        double diskSize = sceneSizeX / boardSizeX * 0.8f;
-        position = new Point(position.getX(), boardSizeY - position.getY());
-        System.out.println(position.getX() + " " + position.getY());
-        Paint color = Color.web("2196F3");
-        if(game.getPlayerLastTurn() == Player.PLAYER2) color = Color.web("1DE9B6");
-        Disk disk = new Disk(diskSize / 2, color, position, game.getPlayerLastTurn());
-        disk.setCenterX(diskSize / 2);
-        disk.setCenterY(diskSize / 2);
-        disk.setTranslateX(position.getX() * tileSize + (tileSize - diskSize) / 2);
-        disk.setTranslateY(position.getY() * tileSize + (tileSize - diskSize) / 2);
-        diskList.add(disk);
-        rootPane.getChildren().add(disk);
+    private void place(int x){
+        if(game.place(x)) {
+            debugPrint();
+            drawDisk(new Point(x, game.getBoard().getPlacedHeight(x)));
+        }
+        updateStatusLabel();
+    }
+
+    private void updateStatusLabel(){
+        if (!game.isGameOver()){
+            statusLabel.setText("Spieler: " + (game.getPlayer() == Player.PLAYER1 ? "Blau" : "Grün"));
+        }
+        else if(game.getWinner() == Player.UNDEFINED) statusLabel.setText("Unentschieden");
+        else statusLabel.setText("Sieger: " + (game.getPlayer() == Player.PLAYER1 ? "Blau" : "Grün"));
     }
 
     private Shape makeGridShape(){
@@ -102,23 +106,36 @@ public class GameSceneController implements Initializable {
             rect.setFill(Color.TRANSPARENT);
             rect.setOnMouseEntered(e -> {
                 Paint color = Color.web("2196F3", 0.3);
-                if(game.getPlayerLastTurn() == Player.PLAYER1) color = Color.web("1DE9B6", 0.3);
+                if(game.isGameOver()) color = Color.TRANSPARENT;
+                else if(game.getPlayerLastTurn() == Player.PLAYER1) color = Color.web("1DE9B6", 0.3);
                 rect.setFill(color);
             });
             rect.setOnMouseExited(e -> rect.setFill(Color.TRANSPARENT));
 
             int finalX = x;
             rect.setOnMouseClicked(e -> {
-                if(game.place(finalX)) {
-                    drawDisk(new Point(finalX, game.getBoard().getPlacedHeight(finalX)));
-                    debugPrint();
-                }
+                place(finalX);
             });
 
             columnShapeList.add(rect);
         }
 
         return columnShapeList;
+    }
+
+    private void drawDisk(Point position){
+        double tileSize = sceneSizeX / boardSizeX;
+        double diskSize = sceneSizeX / boardSizeX * 0.8f;
+        position = new Point(position.getX(), boardSizeY - position.getY());
+        Paint color = Color.web("2196F3");
+        if(game.getPlayerLastTurn() == Player.PLAYER2) color = Color.web("1DE9B6");
+        Disk disk = new Disk(diskSize / 2, color, position, game.getPlayerLastTurn());
+        disk.setCenterX(diskSize / 2);
+        disk.setCenterY(diskSize / 2);
+        disk.setTranslateX(position.getX() * tileSize + (tileSize - diskSize) / 2);
+        disk.setTranslateY(position.getY() * tileSize + (tileSize - diskSize) / 2);
+        diskList.add(disk);
+        rootPane.getChildren().add(disk);
     }
 
     private void debugPrint(){

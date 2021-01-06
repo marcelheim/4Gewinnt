@@ -1,0 +1,9 @@
+.button {
+    -fx-text-fill: #212121;
+    -fx-background-color: linear-gradient(from 0% 100% to 100% 0%, #2196F3 0%, #1DE9B6 100%);
+    -fx-background-radius: 5px;
+}
+
+.label {
+    -fx-text-fill: white;
+}

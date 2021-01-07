@@ -65,10 +65,10 @@ public class SceneController implements Initializable {
 
     private void updateStatusLabel(){
         if (!game.isGameOver()){
-            statusLabel.setText("Spieler: " + (game.getPlayer() == Player.PLAYER1 ? "Blau" : "Grün"));
+            statusLabel.setText("Player: " + (game.getPlayer() == Player.PLAYER1 ? "Blue" : "Green"));
         }
-        else if(game.getWinner() == Player.UNDEFINED) statusLabel.setText("Unentschieden");
-        else statusLabel.setText("Sieger: " + (game.getPlayer() == Player.PLAYER1 ? "Blau" : "Grün"));
+        else if(game.getWinner() == Player.UNDEFINED) statusLabel.setText("Draw");
+        else statusLabel.setText("Winner: " + (game.getPlayer() == Player.PLAYER1 ? "Blue" : "Green"));
     }
 
     private Shape makeGridShape(){

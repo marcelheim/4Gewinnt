@@ -9,11 +9,11 @@
 <AnchorPane prefHeight="650.0" prefWidth="700.0" style="-fx-background-color: #212121;" stylesheets="@../css/Scene.css" xmlns="http://javafx.com/javafx/11.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="m.heim.SceneController">
    <children>
       <Pane fx:id="rootPane" layoutY="50.0" prefHeight="600.0" prefWidth="700.0" />
-      <Button layoutX="591.0" layoutY="10.0" mnemonicParsing="false" onAction="#restartAction" text="Neues Spiel">
+      <Button layoutX="598.0" layoutY="10.0" mnemonicParsing="false" onAction="#restartAction" text="New game">
          <font>
             <Font size="15.0" />
          </font></Button>
-      <Label fx:id="statusLabel" layoutX="14.0" layoutY="15.0" text="Spieler: Blau">
+      <Label fx:id="statusLabel" layoutX="14.0" layoutY="15.0" text="Player: Blue">
          <font>
             <Font size="15.0" />
          </font></Label>
